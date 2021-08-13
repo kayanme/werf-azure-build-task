@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "azure-pipelines-task-lib": "^3.1.7",
+    "del": "2.2.0",
+    "docker-common": "file:../../_build/Tasks/Common/docker-common-1.0.0.tgz"
+  },
+  "devDependencies": {
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.6.0",
+    "@types/q": "^1.5.5",
+    "sync-request": "^6.1.0"
+  }
+}

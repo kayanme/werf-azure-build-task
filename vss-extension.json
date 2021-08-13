@@ -1,0 +1,36 @@
+{
+    "manifestVersion": 1,
+    "id": "werf",
+    "name": "Werf Tools",
+    "version": "0.0.5",
+    "publisher": "IgorMoiseev",
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],
+    "description": "Запуск werf.",
+    "categories": [        
+        "Build and Release"
+    ],
+    "icons": {
+        "default": "images/werf-logo.png"
+    },
+    "files": [
+        {
+            "path": "werf"
+        }
+    ],
+    "contributions": [
+        {
+            "id": "werf-task",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "werf"
+            }
+        }
+    ]
+}
