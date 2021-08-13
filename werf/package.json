@@ -2,7 +2,7 @@
   "dependencies": {
     "azure-pipelines-task-lib": "^3.1.7",
     "del": "2.2.0",
-    "docker-common": "file:../../_build/Tasks/Common/docker-common-1.0.0.tgz"
+    "azure-pipelines-tasks-docker-common-v2": "^2.0.1"
   },
   "devDependencies": {
     "@types/mocha": "^9.0.0",

@@ -1,11 +1,10 @@
 import tl=require('azure-pipelines-task-lib')
 import path = require("path");
 import fs = require("fs");
-import acrauthenticationtokenprovider = require("docker-common/registryauthenticationprovider/acrauthenticationtokenprovider");
-import genericauthenticationtokenprovider = require("docker-common/registryauthenticationprovider/genericauthenticationtokenprovider");
-import AuthenticationTokenProvider from 'docker-common/registryauthenticationprovider/authenticationtokenprovider';
+import acrauthenticationtokenprovider = require('azure-pipelines-tasks-docker-common-v2/registryauthenticationprovider/acrauthenticationtokenprovider');
+import genericauthenticationtokenprovider = require("azure-pipelines-tasks-docker-common-v2/registryauthenticationprovider/genericauthenticationtokenprovider");
+import AuthenticationTokenProvider from 'azure-pipelines-tasks-docker-common-v2/registryauthenticationprovider/authenticationtokenprovider';
 import os = require("os");
-import util = require("util");
 import { ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
 
 
@@ -20,7 +19,7 @@ function addConvergeCommandArgs(commandToExecute:ToolRunner){
     fs.chmodSync(dockerPath+"/config.json", "777");
     commandToExecute.arg("--docker-config="+dockerPath);
     var dockerServer = getDockerServerName();
-    commandToExecute.arg("--repo="+ dockerServer + (tl.getInput("layerRepo")??"/portal-drms"));
+    commandToExecute.arg("--repo="+ dockerServer + (tl.getInput("layerRepo",true)));
     var registryType:string;
     if (tl.getInput("containerRegistryType", true) == 'Azure Container Registry'){
         registryType = "acr"
@@ -29,7 +28,9 @@ function addConvergeCommandArgs(commandToExecute:ToolRunner){
         registryType = "default"
     }
     commandToExecute.arg("--repo-container-registry="+registryType);
-    commandToExecute.arg("--namespace="+tl.getInput("namespace"));
+    if (tl.getInput("namespace") != undefined){
+        commandToExecute.arg("--namespace="+tl.getInput("namespace"));
+     }
     var kubeConfigPath = downloadKubeconfigFileFromEndpoint();
     fs.chmodSync(kubeConfigPath, "777");
     commandToExecute.arg("--kube-config="+kubeConfigPath+"");
@@ -42,7 +43,7 @@ function addDismissCommandArgs(commandToExecute:ToolRunner){
     fs.chmodSync(dockerPath+"/config.json", "777");
     commandToExecute.arg("--docker-config="+dockerPath);
     var dockerServer = getDockerServerName();
-    commandToExecute.arg("--repo="+ dockerServer + (tl.getInput("layerRepo")??"/portal-drms"));
+    commandToExecute.arg("--repo="+ dockerServer + (tl.getInput("layerRepo",true)));
     var registryType:string;
     if (tl.getInput("containerRegistryType", true) == 'Azure Container Registry'){
         registryType = "acr"
@@ -51,7 +52,9 @@ function addDismissCommandArgs(commandToExecute:ToolRunner){
         registryType = "default"
     }
     commandToExecute.arg("--repo-container-registry="+registryType);
-    commandToExecute.arg("--namespace="+tl.getInput("namespace"));
+    if (tl.getInput("namespace") != undefined){
+       commandToExecute.arg("--namespace="+tl.getInput("namespace"));
+    }
     var kubeConfigPath = downloadKubeconfigFileFromEndpoint();
     fs.chmodSync(kubeConfigPath, "777");
     commandToExecute.arg("--kube-config="+kubeConfigPath);
@@ -82,7 +85,11 @@ function getWerfPath():string{
        return tl.getPathInput("specifyLocation",true,true)!;
     }
     else{
-        return "/usr/local/bin/werf"
+       var version:string = tl.getInput("versionSpec")!;
+       var channel:string = tl.getInput("versionChannel")!;       
+       tl.execSync("curl",["-L", "https://raw.githubusercontent.com/werf/multiwerf/master/get.sh", "|", "bash"]);
+       tl.execSync("./multiwerf", ["use", version, channel, "--as-file"])
+       return "/usr/local/bin/werf";
     }
 }
 function getDockerToken(){

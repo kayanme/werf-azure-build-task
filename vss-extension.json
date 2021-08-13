@@ -13,6 +13,10 @@
     "categories": [        
         "Build and Release"
     ],
+    "tags": [
+        "kubernetes",
+        "werf"
+      ],
     "icons": {
         "default": "images/werf-logo.png"
     },

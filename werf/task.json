@@ -174,8 +174,8 @@
             "name": "versionSpec",
             "type": "string",
             "label": "Version Spec",
-            "defaultValue": "1.7.0",
-            "helpMarkDown": "Version Spec of version to get.  Examples: 1.7.0, 1.x.0, 4.x.0, 6.10.0, >=6.10.0",
+            "defaultValue": "1.2",
+            "helpMarkDown": "Version Spec of version to get.  Examples: 1.1, 1.2",
             "groupName": "advanced",
             "visibleRule": "versionOrLocation = version"
         },
@@ -183,8 +183,8 @@
             "name": "versionChannel",
             "type": "pickList",
             "label": "Werf channel to download",
-            "defaultValue": "false",
-            "helpMarkDown": "Always checks online for the latest available version (stable.txt) that satisfies the version spec. This is typically false unless you have a specific scenario to always get latest. This will cause it to incur download costs when potentially not necessary, especially with the hosted build pool.",
+            "defaultValue": "ea",
+            "helpMarkDown": "Select stability channel",
             "required": false,
             "options":{
                 "alpha":"alpha",
