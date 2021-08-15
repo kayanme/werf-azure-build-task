@@ -2,8 +2,8 @@
     "id": "4a33ecd5-db54-4a33-afd9-0872212f6543",
     "name": "Werf",
     "friendlyName": "Werf commands",
-    "description": "!",
-    "helpMarkDown": "!",
+    "description": "Three commands for werf to execute during CI/CD",
+    "helpMarkDown": "Three commands for werf to execute during CI/CD",
     "category": "Deploy",
     "visibility": [
         "Build",
@@ -13,10 +13,15 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 3
+        "Patch": 16
+    },
+    "repository":{
+       "type":"git",
+       "uri":"https://github.com/kayanme/werf-azure-build-task"
     },
     "demands": [],
-    "preview": "false",
+   
+    "preview": "true",
     "groups": [
         {
             "name": "commands",
@@ -30,7 +35,7 @@
         },
         {
             "name": "advanced",
-            "displayName": "Advanced",
+            "displayName": "Werf version",
             "isExpanded": false
         },
         {
@@ -72,7 +77,8 @@
             "label": "Send docker config to chart",
             "defaultValue": "false",
             "helpMarkDown": "Set .Valus.dockerconfigjson.",
-            "groupName": "commands"
+            "groupName": "commands",
+            "visibleRule": "command != helm" 
         },
         {
             "name": "useConfigurationFile",
@@ -111,7 +117,8 @@
             "defaultValue": "",
             "required": true,
             "helpMarkDown": "Repository name for layers in given docker configuration",
-            "groupName": "commands"            
+            "groupName": "commands",
+            "visibleRule": "command != helm"      
         },
         {
             "name": "containerRegistryType",
@@ -124,7 +131,8 @@
                 "Container Registry": "Container Registry"
             },
             "helpMarkDown": "Select a Container registry type.",
-            "groupName": "registry"
+            "groupName": "commands",
+            "visibleRule": "command != helm"      
         },
         {
             "name": "dockerRegistryEndpoint",
@@ -134,8 +142,8 @@
             "type": "connectedService:dockerregistry",
             "label": "Docker Registry Connection",
             "helpMarkDown": "Select a Docker registry connection. Required for commands that need to authenticate with a registry.",
-            "visibleRule": "containerRegistryType = Container Registry",
-            "groupName": "registry"
+            "visibleRule": "containerRegistryType = Container Registry &&  command != helm ",
+            "groupName": "commands"   
         },
         {
             "name": "azureSubscriptionEndpoint",
@@ -145,38 +153,43 @@
             "type": "connectedService:AzureRM",
             "label": "Azure subscription",
             "helpMarkDown": "Select an Azure subscription, which has your Azure Container Registry.",
-            "visibleRule": "containerRegistryType = Azure Container Registry",
+            "visibleRule": "containerRegistryType = Azure Container Registry &&  command != helm",
             "defaultValue": "",
-            "groupName": "registry"
+            "groupName": "commands"
         },
         {
             "name": "azureContainerRegistry",
             "label": "Azure Container Registry",
             "type": "pickList",
             "helpMarkDown": "Select an Azure Container Registry. Required for commands that need to authenticate with a registry.",
-            "visibleRule": "containerRegistryType = Azure Container Registry",
+            "visibleRule": "containerRegistryType = Azure Container Registry  &&  command != helm",
             "defaultValue": "",
-            "groupName": "registry"
+            "groupName": "commands"
         },  
+
         {
             "name": "versionOrLocation",
             "type": "radio",
-            "label": "Choose werf version or exact location",
+            "label": "Choose werf version or exact location or uri to download",
             "defaultValue": "version",
             "required": false,
             "options": {
                 "version": "Version",
-                "location": "Specify Location"
+                "location": "Specify Location",
+                "uri": "Specify Uri to download"
             },
             "groupName": "advanced"
         },
         {
             "name": "versionSpec",
-            "type": "string",
+            "type": "pickList",
             "label": "Version Spec",
             "defaultValue": "1.2",
             "helpMarkDown": "Version Spec of version to get.  Examples: 1.1, 1.2",
             "groupName": "advanced",
+            "options":{
+                "1.2":"1.2"
+            },
             "visibleRule": "versionOrLocation = version"
         },
         {
@@ -195,17 +208,7 @@
             },
             "groupName": "advanced",
             "visibleRule": "versionOrLocation = version"
-        },
-        {
-            "name": "checkLatest",
-            "type": "boolean",
-            "label": "Check for Latest Version",
-            "defaultValue": "false",
-            "helpMarkDown": "Always checks online for the latest available version (stable.txt) that satisfies the version spec. This is typically false unless you have a specific scenario to always get latest. This will cause it to incur download costs when potentially not necessary, especially with the hosted build pool.",
-            "required": false,
-            "groupName": "advanced",
-            "visibleRule": "versionOrLocation = version"
-        },
+        },    
         {
             "name": "specifyLocation",
             "type": "filePath",
@@ -217,13 +220,54 @@
             "visibleRule": "versionOrLocation = location"
         },
         {
+            "name": "specifyUri",
+            "type": "string",
+            "label": "Uri to werf binary",
+            "defaultValue": "",
+            "helpMarkDown": "Uri to custom werf build",
+            "required": true,
+            "groupName": "advanced",
+            "visibleRule": "versionOrLocation = uri"
+        },
+        {
+            "name": "user",
+            "type": "string",
+            "label": "User for download",
+            "defaultValue": "",
+            "helpMarkDown": "User for download",
+            "required": false,
+            "groupName": "advanced",
+            "visibleRule": "versionOrLocation = uri"
+        },
+        {
+            "name": "password",
+            "type": "string",
+            "label": "Password for download",
+            "defaultValue": "",
+            "helpMarkDown": "Password for download",
+            "required": false,
+            "groupName": "advanced",
+            "visibleRule": "versionOrLocation = uri"
+        },
+        {
+            "name": "downloadOnce",
+            "type": "boolean",
+            "label": "Download once",
+            "defaultValue": "",
+            "helpMarkDown": "Should it be downloaded only once or every build",
+            "required": false,
+            "groupName": "advanced",
+            "visibleRule": "versionOrLocation = uri"
+        },
+        {
             "name": "namespace",
             "type": "string",
             "label": "Namespace",
             "required": false,
             "defaultValue": "",
             "helpMarkDown": "Name of the namespace to run the command in.",
-            "groupName": "commands"
+            "groupName": "commands",
+            "visibleRule": "command != helm" 
         }        
     ],
     "dataSourceBindings": [

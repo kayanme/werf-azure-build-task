@@ -2,21 +2,31 @@
     "manifestVersion": 1,
     "id": "werf",
     "name": "Werf Tools",
-    "version": "0.0.5",
+    "version": "0.0.16",
     "publisher": "IgorMoiseev",
     "targets": [
         {
             "id": "Microsoft.VisualStudio.Services"
         }
     ],
-    "description": "Запуск werf.",
+    "description": "Launch werf commands to your helm packages.",
     "categories": [        
         "Build and Release"
     ],
     "tags": [
         "kubernetes",
-        "werf"
+        "werf",
+        "helm"
       ],
+    "public":true,
+    "content": {
+        "details": {
+            "path": "README.md"
+        },
+        "license":{
+            "path":"LICENSE"
+        }        
+    },
     "icons": {
         "default": "images/werf-logo.png"
     },

@@ -1,4 +1,7 @@
 import tl=require('azure-pipelines-task-lib')
+//import download=require('azure-pipelines-tasks-utility-common/downloadutility')
+import  toolLib = require('azure-pipelines-tool-lib/tool');
+import * as handlers from 'typed-rest-client/Handlers'
 import path = require("path");
 import fs = require("fs");
 import acrauthenticationtokenprovider = require('azure-pipelines-tasks-docker-common-v2/registryauthenticationprovider/acrauthenticationtokenprovider');
@@ -6,20 +9,22 @@ import genericauthenticationtokenprovider = require("azure-pipelines-tasks-docke
 import AuthenticationTokenProvider from 'azure-pipelines-tasks-docker-common-v2/registryauthenticationprovider/authenticationtokenprovider';
 import os = require("os");
 import { ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
+import { IRequestHandler } from 'typed-rest-client/Interfaces';
 
 
 var userDir = getNewUserDirPath();
-run();
+run()
 
 function addConvergeCommandArgs(commandToExecute:ToolRunner){        
     if (tl.getInput("sendDockerConfigToChart")??false) { 
        commandToExecute.arg("--set-docker-config-json-value=true")      
     }
+    commandToExecute.arg("--home-dir="+userDir);   
     var dockerPath = downloadDockerConfigFromEndpoint();
     fs.chmodSync(dockerPath+"/config.json", "777");
     commandToExecute.arg("--docker-config="+dockerPath);
     var dockerServer = getDockerServerName();
-    commandToExecute.arg("--repo="+ dockerServer + (tl.getInput("layerRepo",true)));
+    commandToExecute.arg("--repo="+ dockerServer + "/" + (tl.getInput("layerRepo",true)));
     var registryType:string;
     if (tl.getInput("containerRegistryType", true) == 'Azure Container Registry'){
         registryType = "acr"
@@ -41,6 +46,7 @@ function addConvergeCommandArgs(commandToExecute:ToolRunner){
 function addDismissCommandArgs(commandToExecute:ToolRunner){               
     var dockerPath = downloadDockerConfigFromEndpoint();
     fs.chmodSync(dockerPath+"/config.json", "777");
+    commandToExecute.arg("--home-dir="+userDir);   
     commandToExecute.arg("--docker-config="+dockerPath);
     var dockerServer = getDockerServerName();
     commandToExecute.arg("--repo="+ dockerServer + (tl.getInput("layerRepo",true)));
@@ -62,11 +68,19 @@ function addDismissCommandArgs(commandToExecute:ToolRunner){
 }
 
 
-function run() {
-    const command  = tl.getInput("command",true)!;    
-    var commandToExecute = tl.tool(getWerfPath());       
+async function run() : Promise<void> {
+    const command  = tl.getInput("command",true)!;   
+
+    var path : string;
+    try {  
+       path = await getWerfPath(); 
+    } catch (error) {
+        tl.setResult(tl.TaskResult.Failed,error.message)
+        return;
+    }
+    var commandToExecute = tl.tool(path);       
     commandToExecute.arg(command);    
-    commandToExecute.arg("--home-dir="+userDir);       
+       
     if (command == "converge"){
         addConvergeCommandArgs(commandToExecute);
     }
@@ -74,24 +88,57 @@ function run() {
         addDismissCommandArgs(commandToExecute);
     }
 
-    commandToExecute.line(tl.getInput("arguments",false)??"");    
-    commandToExecute.exec().then(()=> tl.setResult(tl.TaskResult.Succeeded,"werf completed"),(error)=>tl.setResult(tl.TaskResult.Failed,error.message))
-                           .catch((error)=>tl.setResult(tl.TaskResult.Failed,error.message)).done();
+    commandToExecute.line(tl.getInput("arguments",false)??"");     
+    try{
+      await commandToExecute.exec();
+      tl.setResult(tl.TaskResult.Succeeded,"werf completed");
+    } catch (error){
+      tl.setResult(tl.TaskResult.Failed,error.message)
+    }                         
     
 }
 
-function getWerfPath():string{
-    if (tl.getInput("versionOrLocation") == 'location'){
+async function  getWerfPath(){
+    var location = tl.getInput("versionOrLocation",true)!;
+    if (location == 'location'){
        return tl.getPathInput("specifyLocation",true,true)!;
     }
-    else{
+    else  if (location == 'version'){
        var version:string = tl.getInput("versionSpec")!;
-       var channel:string = tl.getInput("versionChannel")!;       
-       tl.execSync("curl",["-L", "https://raw.githubusercontent.com/werf/multiwerf/master/get.sh", "|", "bash"]);
-       tl.execSync("./multiwerf", ["use", version, channel, "--as-file"])
+       var channel:string = tl.getInput("versionChannel")!;             
+     
+       let cachedToolpath = toolLib.findLocalTool("multiwerf", "1.0.0");
+       if (!cachedToolpath){
+          var path = await toolLib.downloadTool("https://raw.githubusercontent.com/werf/multiwerf/master/get.sh","./get.sh");           
+          fs.chmodSync(path, "777");            
+          var res = tl.execSync(path,[]).stderr;  
+          if (res)  {
+             tl.warning(res);             
+          }         
+      //    fs.chmodSync("./multiwerf", "777"); 
+          await toolLib.cacheFile("./multiwerf","multiwerf","multiwerf","1.0.0");
+          cachedToolpath = toolLib.findLocalTool("multiwerf", "1.0.0");
+       }         
+       await tl.tool(cachedToolpath+"/multiwerf").arg("use").arg(version).arg(channel).arg("--as-file").exec();
+      
        return "/usr/local/bin/werf";
     }
+    else{
+        let cachedToolpath = toolLib.findLocalTool("werf", "0.0.0");
+        if (!cachedToolpath || !tl.getBoolInput("downloadOnce")){
+           var auth:IRequestHandler[] = [];
+           if (tl.getInput("user")) {
+                auth = [new handlers.BasicCredentialHandler(tl.getInput("user")!, tl.getInput("password")!)]
+           }
+           var path = await toolLib.downloadTool(tl.getInput("specifyUri",true)!,"./werf",auth);           
+           fs.chmodSync(path, "777");                                
+           await toolLib.cacheFile(path,"werf","werf","0.0.0");
+           cachedToolpath = toolLib.findLocalTool("werf", "0.0.0");          
+        }        
+        return cachedToolpath + "/werf"; 
+    }
 }
+
 function getDockerToken(){
     var registryType = tl.getInput("containerRegistryType", true);
     var authenticationProvider : AuthenticationTokenProvider;
@@ -131,6 +178,7 @@ function downloadKubeconfigFileFromEndpoint() :string {
 
 
 function getTempDirectory() {
+    
     return os.tmpdir();
 }
 

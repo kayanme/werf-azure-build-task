@@ -1,8 +1,11 @@
 {
   "dependencies": {
     "azure-pipelines-task-lib": "^3.1.7",
+    "azure-pipelines-tasks-docker-common-v2": "^2.0.1",
+    "azure-pipelines-tasks-utility-common": "^3.0.1",
+    "azure-pipelines-tool-lib": "^0.13.3",
     "del": "2.2.0",
-    "azure-pipelines-tasks-docker-common-v2": "^2.0.1"
+    "typed-rest-client": "1.8.4"
   },
   "devDependencies": {
     "@types/mocha": "^9.0.0",
