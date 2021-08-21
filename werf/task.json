@@ -2,8 +2,8 @@
     "id": "4a33ecd5-db54-4a33-afd9-0872212f6543",
     "name": "Werf",
     "friendlyName": "Werf commands",
-    "description": "Three commands for werf to execute during CI/CD",
-    "helpMarkDown": "Three commands for werf to execute during CI/CD",
+    "description": "Commands for werf to execute during CI/CD",
+    "helpMarkDown": "Commands for werf to execute during CI/CD",
     "category": "Deploy",
     "visibility": [
         "Build",
@@ -13,16 +13,20 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 16
+        "Patch": 19
     },
     "repository":{
        "type":"git",
        "uri":"https://github.com/kayanme/werf-azure-build-task"
     },
-    "demands": [],
-   
+    "demands": ["docker"],   
     "preview": "true",
     "groups": [
+        {
+            "name": "k8s",
+            "displayName": "Kubernetes connection",
+            "isExpanded": true
+        },
         {
             "name": "commands",
             "displayName": "Commands",
@@ -52,7 +56,16 @@
             ],
             "type": "connectedService:kubernetes",
             "label": "Kubernetes Service Connection",
-            "helpMarkDown": "Select a Kubernetes service connection."
+            "helpMarkDown": "Select a Kubernetes service connection.",
+            "groupName": "k8s"
+        },
+        {
+            "name": "useConfigurationFile",
+            "type": "boolean",
+            "label": "Use Configuration files",
+            "defaultValue": "false",
+            "helpMarkDown": "Use Kubernetes configuration file or folder with the command.",
+            "groupName": "k8s"
         },
         {
             "name": "command",
@@ -76,17 +89,9 @@
             "type": "boolean",
             "label": "Send docker config to chart",
             "defaultValue": "false",
-            "helpMarkDown": "Set .Valus.dockerconfigjson.",
+            "helpMarkDown": "Set .Values.dockerconfigjson for helm charts. --set-docker-config-json=true",
             "groupName": "commands",
             "visibleRule": "command != helm" 
-        },
-        {
-            "name": "useConfigurationFile",
-            "type": "boolean",
-            "label": "Use Configuration files",
-            "defaultValue": "false",
-            "helpMarkDown": "Use Kubernetes configuration file or folder with the command.",
-            "groupName": "commands"
         },
         {
             "name": "configuration",
@@ -96,6 +101,16 @@
             "required": true,
             "helpMarkDown": "Filename, directory, or URL to kubernetes configuration files that will be used with the commands.",
             "visibleRule": "useConfigurationFile = true",
+            "groupName": "k8s"
+        },
+        {
+            "name": "werfDir",
+            "type": "filePath",
+            "label": "Configuration File",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Filename, directory, or URL to kubernetes configuration files that will be used with the commands.",
+            "visibleRule": "command != helm",
             "groupName": "commands"
         },
         {

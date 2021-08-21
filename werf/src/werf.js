@@ -40,8 +40,8 @@ const os = require("os");
 var userDir = getNewUserDirPath();
 run();
 function addConvergeCommandArgs(commandToExecute) {
-    var _a;
-    if ((_a = tl.getInput("sendDockerConfigToChart")) !== null && _a !== void 0 ? _a : false) {
+    var setDockerConfig = tl.getBoolInput("sendDockerConfigToChart", true);
+    if (setDockerConfig) {
         commandToExecute.arg("--set-docker-config-json-value=true");
     }
     commandToExecute.arg("--home-dir=" + userDir);

@@ -15,8 +15,9 @@ import { IRequestHandler } from 'typed-rest-client/Interfaces';
 var userDir = getNewUserDirPath();
 run()
 
-function addConvergeCommandArgs(commandToExecute:ToolRunner){        
-    if (tl.getInput("sendDockerConfigToChart")??false) { 
+function addConvergeCommandArgs(commandToExecute:ToolRunner){    
+    var setDockerConfig = tl.getBoolInput("sendDockerConfigToChart",true)!;    
+    if (setDockerConfig) { 
        commandToExecute.arg("--set-docker-config-json-value=true")      
     }
     commandToExecute.arg("--home-dir="+userDir);   
