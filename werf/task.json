@@ -13,7 +13,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 19
+        "Patch": 22
     },
     "repository":{
        "type":"git",
@@ -106,10 +106,10 @@
         {
             "name": "werfDir",
             "type": "filePath",
-            "label": "Configuration File",
+            "label": "Werf base dir",
             "defaultValue": "",
-            "required": true,
-            "helpMarkDown": "Filename, directory, or URL to kubernetes configuration files that will be used with the commands.",
+            "required": false,
+            "helpMarkDown": "Root directory woth werf manifest and charts",
             "visibleRule": "command != helm",
             "groupName": "commands"
         },

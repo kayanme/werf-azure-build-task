@@ -20,12 +20,16 @@ function addConvergeCommandArgs(commandToExecute:ToolRunner){
     if (setDockerConfig) { 
        commandToExecute.arg("--set-docker-config-json-value=true")      
     }
-    commandToExecute.arg("--home-dir="+userDir);   
+    commandToExecute.arg("--home-dir="+userDir); 
+    var werfDir = tl.getPathInput("werfDir");  
+    if (werfDir){
+        commandToExecute.arg("--dir="+werfDir); 
+    }
     var dockerPath = downloadDockerConfigFromEndpoint();
     fs.chmodSync(dockerPath+"/config.json", "777");
     commandToExecute.arg("--docker-config="+dockerPath);
     var dockerServer = getDockerServerName();
-    commandToExecute.arg("--repo="+ dockerServer + "/" + (tl.getInput("layerRepo",true)));
+    commandToExecute.arg("--repo="+ dockerServer + "/" + (tl.getInput("layerRepo",true)?.toLowerCase()));
     var registryType:string;
     if (tl.getInput("containerRegistryType", true) == 'Azure Container Registry'){
         registryType = "acr"

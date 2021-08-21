@@ -40,16 +40,21 @@ const os = require("os");
 var userDir = getNewUserDirPath();
 run();
 function addConvergeCommandArgs(commandToExecute) {
+    var _a;
     var setDockerConfig = tl.getBoolInput("sendDockerConfigToChart", true);
     if (setDockerConfig) {
         commandToExecute.arg("--set-docker-config-json-value=true");
     }
     commandToExecute.arg("--home-dir=" + userDir);
+    var werfDir = tl.getPathInput("werfDir");
+    if (werfDir) {
+        commandToExecute.arg("--dir=" + werfDir);
+    }
     var dockerPath = downloadDockerConfigFromEndpoint();
     fs.chmodSync(dockerPath + "/config.json", "777");
     commandToExecute.arg("--docker-config=" + dockerPath);
     var dockerServer = getDockerServerName();
-    commandToExecute.arg("--repo=" + dockerServer + "/" + (tl.getInput("layerRepo", true)));
+    commandToExecute.arg("--repo=" + dockerServer + "/" + ((_a = tl.getInput("layerRepo", true)) === null || _a === void 0 ? void 0 : _a.toLowerCase()));
     var registryType;
     if (tl.getInput("containerRegistryType", true) == 'Azure Container Registry') {
         registryType = "acr";
