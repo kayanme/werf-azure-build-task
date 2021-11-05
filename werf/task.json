@@ -13,7 +13,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 22
+        "Patch": 27
     },
     "repository":{
        "type":"git",
@@ -91,7 +91,7 @@
             "defaultValue": "false",
             "helpMarkDown": "Set .Values.dockerconfigjson for helm charts. --set-docker-config-json=true",
             "groupName": "commands",
-            "visibleRule": "command != helm" 
+            "visibleRule": "command != helm && command != dismiss" 
         },
         {
             "name": "configuration",

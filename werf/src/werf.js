@@ -42,14 +42,10 @@ run();
 function addConvergeCommandArgs(commandToExecute) {
     var _a;
     var setDockerConfig = tl.getBoolInput("sendDockerConfigToChart", true);
-    if (setDockerConfig) {
-        commandToExecute.arg("--set-docker-config-json-value=true");
-    }
+    commandToExecute.argIf(setDockerConfig, "--set-docker-config-json-value=true");
     commandToExecute.arg("--home-dir=" + userDir);
     var werfDir = tl.getPathInput("werfDir");
-    if (werfDir) {
-        commandToExecute.arg("--dir=" + werfDir);
-    }
+    commandToExecute.argIf(werfDir, "--dir=" + werfDir);
     var dockerPath = downloadDockerConfigFromEndpoint();
     fs.chmodSync(dockerPath + "/config.json", "777");
     commandToExecute.arg("--docker-config=" + dockerPath);
@@ -63,9 +59,8 @@ function addConvergeCommandArgs(commandToExecute) {
         registryType = "default";
     }
     commandToExecute.arg("--repo-container-registry=" + registryType);
-    if (tl.getInput("namespace") != undefined) {
-        commandToExecute.arg("--namespace=" + tl.getInput("namespace"));
-    }
+    var namespace = tl.getInput("namespace");
+    commandToExecute.argIf(namespace != null, "--namespace=" + namespace);
     var kubeConfigPath = downloadKubeconfigFileFromEndpoint();
     fs.chmodSync(kubeConfigPath, "777");
     commandToExecute.arg("--kube-config=" + kubeConfigPath + "");
@@ -75,6 +70,8 @@ function addDismissCommandArgs(commandToExecute) {
     fs.chmodSync(dockerPath + "/config.json", "777");
     commandToExecute.arg("--home-dir=" + userDir);
     commandToExecute.arg("--docker-config=" + dockerPath);
+    var werfDir = tl.getPathInput("werfDir");
+    commandToExecute.argIf(werfDir, "--dir=" + werfDir);
     var dockerServer = getDockerServerName();
     commandToExecute.arg("--repo=" + dockerServer + (tl.getInput("layerRepo", true)));
     var registryType;
@@ -104,14 +101,17 @@ function run() {
             tl.setResult(tl.TaskResult.Failed, error.message);
             return;
         }
+        tl.debug(path);
         var commandToExecute = tl.tool(path);
         commandToExecute.arg(command);
+        tl.debug("before arg collect");
         if (command == "converge") {
             addConvergeCommandArgs(commandToExecute);
         }
         if (command == "dismiss") {
             addDismissCommandArgs(commandToExecute);
         }
+        tl.debug("before exec");
         commandToExecute.line((_a = tl.getInput("arguments", false)) !== null && _a !== void 0 ? _a : "");
         try {
             yield commandToExecute.exec();
@@ -143,8 +143,15 @@ function getWerfPath() {
                 yield toolLib.cacheFile("./multiwerf", "multiwerf", "multiwerf", "1.0.0");
                 cachedToolpath = toolLib.findLocalTool("multiwerf", "1.0.0");
             }
-            yield tl.tool(cachedToolpath + "/multiwerf").arg("use").arg(version).arg(channel).arg("--as-file").exec();
-            return "/usr/local/bin/werf";
+            var command = tl.tool(cachedToolpath + "/multiwerf").arg("update").arg(version).arg(channel);
+            yield command.exec({ failOnStdErr: true });
+            command = tl.tool(cachedToolpath + "/multiwerf").arg("werf-path").arg(version).arg(channel);
+            var path = "";
+            command.on("stdout", output => {
+                path = output.toString();
+            });
+            yield command.exec({ failOnStdErr: true });
+            return path.trim();
         }
         else {
             let cachedToolpath = toolLib.findLocalTool("werf", "0.0.0");
